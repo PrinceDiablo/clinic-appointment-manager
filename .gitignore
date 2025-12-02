@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Bytecode / compiled
+*.so
+
+# Flask 
+instance/
+.webassets-cache
+
+# Logs
+*.log
+logs/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+*.cover
+
+# Environment variables
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+wheelhouse/
+MANIFEST
+
+# MySQL dumps
+*.sql.gz
+
+# Node/JS (if using for frontend assets)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Cache
+.cache/
