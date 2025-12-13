@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block title %}<title>Clinic App</title>{% endblock %}
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+        }
+
+        /* NAVBAR */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2d2d2d;
+            padding: 12px 20px;
+            color: #fff;
+        }
+
+        nav .left,
+        nav .right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        /* PAGE CONTENT */
+        main {
+            padding: 30px 20px;
+            min-height: 70vh;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #e5e5e5;
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <nav>
+        <div class="left">
+            <a href="{{ url_for('main.index') }}">Home</a>
+        </div>
+
+        <div class="right">
+            {% if current_user.is_authenticated %}
+                
+                {% if not current_user.is_patient %}
+                <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                {% endif %}
+
+                <a href="{{ url_for('auth.profile') }}">Profile</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">Login</a>
+                <a href="{{ url_for('auth.register') }}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        © {{ current_year or 2025 }} Clinic Appointment Manager
+    </footer>
+
+</body>
+</html>
