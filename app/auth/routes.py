@@ -11,27 +11,27 @@ def login():
 
     # User reached route via POST
     if request.method == "POST":
-        username = request.form.get("username")
+        user_name = request.form.get("user_name")
         password = request.form.get("password")
 
         # Ensure username was submitted
-        if not username:
-            flash("must provide username")
+        if not user_name:
+            flash("Must provide username")
             return render_template("auth/login.html")
 
         # Ensure password was submitted
         if not password:
-            flash("must provide password")
+            flash("Must provide password")
             return render_template("auth/login.html")
         
         # Check valid username and password
-        row = fetchone("SELECT * FROM users WHERE user_name=%s", (username,))
-        if not row:
+        row = fetchone(
+            "SELECT * FROM users WHERE user_name=%s AND is_active=1", 
+            (user_name,)
+        )
+
+        if not row or not check_password_hash(row["password_hash"], password):
             flash("Incorrect username or password")
-            return render_template("auth/login.html")
-        
-        if len(row) != 1 or not check_password_hash(row["password_hash"], password):
-            flash("Incorect username or password")
             return render_template("auth/login.html")
         
         # Create user session
@@ -63,45 +63,49 @@ def register():
     # User reached route via POST
     if request.method == "POST":
 
-        username = request.form.get("user_name")
+        user_name = request.form.get("user_name")
         email = request.form.get("email")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
         
         # Ensure username was submitted
-        if not username:
-            flash("must provide username")
+        if not user_name:
+            flash("Must provide username")
+            return render_template("auth/register.html")
+        
+        # Ensure email was submitted
+        if not email:
+            flash("Must provide email")
             return render_template("auth/register.html")
 
-        # Ensure password was submitted
-        if not password:
-            flash("must provide password")
-            return render_template("auth/register.html")
-
-        # Ensure confirm password was submitted
-        if not confirmation:
-            flash("must provide confirm password")
+        # Ensure password and confirm password was submitted
+        if not password or not confirmation:
+            flash("Must provide password and confirmation")
             return render_template("auth/register.html")
 
         # Ensure password and confirmation matches
         if password != confirmation:
-            flash("password and confirm password is not same")
+            flash("Passwords do not match")
             return render_template("auth/register.html")
 
         # Check for dublicate Username
-        if fetchone("SELECT id FROM users WHERE username=%s", (username,)):
+        if fetchone("SELECT id FROM users WHERE user_name=%s", (user_name,)):
             flash("Username already in use. Please select a different username.")
             return render_template("auth/register.html")
         
         # Check for dublicate E-mail
-        if fetchone("SELECT id FROM users WHERE username=%s", (email,)):
+        if fetchone("SELECT id FROM users WHERE email=%s", (email,)):
             flash("E-mail already registered")
             return render_template("auth/register.html")
 
         # Add user to database 
         hashed_password = generate_password_hash(password)
-        execute_commit("INSERT INTO users (username, email, password_hash, role) VALUES (%s, %s, %s, %s)", (username, email, hashed_password, "patient"))
-        
+
+        execute_commit(
+            "INSERT INTO users (user_name, email, password_hash, role) " \
+            "VALUES (%s, %s, %s, %s)", 
+            (user_name, email, hashed_password, "patient")
+        )
 
         # Redirect user to login page
         flash("Account created. Please log in")
