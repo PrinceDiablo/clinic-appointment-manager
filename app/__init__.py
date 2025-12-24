@@ -12,8 +12,27 @@ def load_user(user_id):
     from app.auth.models import User
     from app.db import fetchone
 
-    row = fetchone("SELECT * FROM users WHERE id=%s", (int(user_id),))
-    return User.from_row(row)
+    row = fetchone(
+        """
+        SELECT 
+            u.*,
+            GROUP_CONCAT(DISTINCT r.name ORDER BY r.name) AS roles,
+            GROUP_CONCAT(DISTINCT p.name ORDER BY p.name) AS permissions 
+        FROM users u 
+        JOIN user_roles ur ON ur.user_id = u.id
+        JOIN roles r ON r.id = ur.role_id
+        JOIN role_permissions rp ON rp.role_id = r.id
+        JOIN permissions p ON p.id = rp.permission_id
+        WHERE u.id = %s AND u.is_active = 1
+        GROUP BY u.id;
+        """, (int(user_id),))
+    if not row:
+        return None
+    
+    roles = row["roles"].split(",") if row["roles"] else []
+    permissions = row["permissions"].split(",") if row["permissions"] else []
+
+    return User.from_row(row, roles, permissions)
 
 
 def create_app():
@@ -26,16 +45,23 @@ def create_app():
     login_manager.init_app(app)
 
     # Register blueprints
-    from .main import bp as main_bp
-    app.register_blueprint(main_bp)
-
     from .auth import bp as auth_bp
     app.register_blueprint(auth_bp)
 
+    from .appointments import bp as appoint_bp
+    app.register_blueprint(appoint_bp)
+
+    from dashboards.main import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    from dashboards.admin import bp as admin_bp
+    app.register_blueprint(admin_bp)
+
+    from dashboards.doctor import bp as doc_bp
+    app.register_blueprint(doc_bp)
+
+    from app.seed import run_seed_if_needed
+    with app.app_context():
+        run_seed_if_needed()
 
     return app
-
-
-
-
-

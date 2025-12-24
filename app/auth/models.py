@@ -1,19 +1,24 @@
 from flask_login import UserMixin
 
 class User(UserMixin):
-    def __init__(self, row):
+    def __init__(self, row:dict, roles:list=None, permissions:list=None):
         self.id = row["id"]
         self.email = row["email"]
         self.user_name = row["user_name"]
         self.is_active = bool(row.get("is_active", 1))
 
-        self.is_admin = (self.role == "admin")
-        self.is_doctor = (self.role == "doctor")
-        self.is_staff = (self.role == "staff")
-        self.is_patient = (self.role == "patient")
+        self.roles = [r.lower() for r in (roles or [])]
+        self.permissions = [p.lower() for p in (permissions or [])]
     
-    @staticmethod
-    def from_row(row):
+    def has_role(self, role_name:str) -> bool:
+        return role_name in self.roles
+    
+    def has_permission(self, permission_name:str) -> bool:
+        return permission_name in self.permissions
+
+    @classmethod
+    def from_row(cls, row:dict, roles:list=None, permissions:list=None) -> "User":
         if not row:
             return None
-        return User(row)
+        return cls(row, roles, permissions)
+    
