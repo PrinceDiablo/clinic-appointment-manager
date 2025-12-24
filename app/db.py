@@ -50,9 +50,9 @@ def fetchone(query, parameters=None):
         cursor.execute(query, parameters or ())
         return cursor.fetchone()
     
-def execute_commit(query, parameters=None):
+def execute_commit(query, parameters=None) -> list:
     """
-    Helper function to execute: INSERT/UPDATE/DELETE and commit. Returns rowcount
+    Helper function to execute: INSERT/UPDATE/DELETE and commit. Returns rowcount and lastrowid
     Usage:
         n = execute_commit("UPDATE users SET failed_logins = failed_logins+1 WHERE id=%s", (id,))
     """
@@ -60,4 +60,4 @@ def execute_commit(query, parameters=None):
     with connection.cursor() as cursor:
         cursor.execute(query, parameters or ())
     connection.commit()
-    return cursor.rowcount
+    return cursor.rowcount, cursor.lastrowid
