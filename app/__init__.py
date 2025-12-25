@@ -60,8 +60,13 @@ def create_app():
     from dashboards.doctor import bp as doc_bp
     app.register_blueprint(doc_bp)
 
+    # Seed DB with data on first initialization
     from app.seed import run_seed_if_needed
     with app.app_context():
         run_seed_if_needed()
+
+    #Ensure DB connection is closed after each request
+    from app.db import close_db
+    app.teardown_appcontext(close_db)
 
     return app
