@@ -1,6 +1,7 @@
 import pymysql
 from pymysql.cursors import DictCursor
 from flask import current_app, g
+from contextlib import contextmanager
 
 def db_connect():
     """ 
@@ -39,9 +40,10 @@ def close_db(e=None):
         except Exception:
             pass
 
-def fetchone(query, parameters=None):
+def fetchone(query, parameters=None) -> dict:
     """
-    Helper function to execute: SELECT and return a single row dict.
+    Execute: SELECT 
+    Return: A single row dict.
     Usage:
         row = fetchone("SELECT * FROM users WHERE id=%s",(id,))
     """
@@ -52,7 +54,9 @@ def fetchone(query, parameters=None):
     
 def execute_commit(query, parameters=None) -> list:
     """
-    Helper function to execute: INSERT/UPDATE/DELETE and commit. Returns rowcount and lastrowid
+    WARNING: Do not use inside a `transaction()` block. This function commits immediately.
+    Execute: INSERT/UPDATE/DELETE and commit. 
+    Return: rowcount and lastrowid.
     Usage:
         n = execute_commit("UPDATE users SET failed_logins = failed_logins+1 WHERE id=%s", (id,))
     """
@@ -61,3 +65,26 @@ def execute_commit(query, parameters=None) -> list:
         cursor.execute(query, parameters or ())
     connection.commit()
     return cursor.rowcount, cursor.lastrowid
+
+def execute(query, parameters=None) -> list:
+    """
+    Execute: INSERT/UPDATE/DELETE without committing. 
+    Return: rowcount and lastrowid.
+    Usage:
+        n = execute("UPDATE users SET failed_logins = failed_logins+1 WHERE id=%s", (id,))
+    """
+    connection = get_db()
+    with connection.cursor() as cursor:
+        cursor.execute(query, parameters or ())
+    return cursor.rowcount, cursor.lastrowid
+
+@contextmanager
+def transaction():
+    db = get_db()
+    try:
+        db.begin()
+        yield
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
