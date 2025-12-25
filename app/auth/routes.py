@@ -2,7 +2,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import bp
-from app.db import fetchone, execute_commit
+from app.db import fetchone, execute, transaction
 from app.auth.models import User
 from app.utils.navigation import landing_for_user
 
@@ -52,7 +52,6 @@ def post_login():
     """
     endpoint = landing_for_user(current_user)
     return redirect(url_for(endpoint))
-
     
 @bp.route("/logout", methods=["POST"])
 @login_required
@@ -63,12 +62,9 @@ def logout():
     flash("Logged out")
     return redirect(url_for("main.index"))
 
-# NOTE: Registration is not yet fully transactional.
-# Proper transaction support will be added after
-# DB helpers support non-autocommit execution.
 @bp.route("/register", methods=["GET", "POST"])
 def register():
-    """Register user"""
+    """Register a new user and assign the default role"""
 
     # User reached route via GET
     if request.method == "GET":
@@ -101,7 +97,7 @@ def register():
         flash("Passwords do not match")
         return render_template("auth/register.html")
 
-    # Check dublicates
+    # Check duplicates
     if fetchone("SELECT id FROM users WHERE user_name=%s", (user_name,)):
         flash("Username already in use. Please select a different username.")
         return render_template("auth/register.html")
@@ -110,20 +106,34 @@ def register():
         flash("E-mail already registered")
         return render_template("auth/register.html")
 
-    # Add user and role in the database 
+    # Add user and assign default role atomically
     hashed_password = generate_password_hash(password)
 
+    row = fetchone("SELECT id FROM roles WHERE name = %s",("patient",))
+    if not row:
+        flash("Registration configuration error.")
+        return render_template("auth/register.html")
+    role_id = row["id"]
+
     try:
-        _, user_id = execute_commit(
-            "INSERT INTO users (user_name, email, password_hash) " \
-            "VALUES (%s, %s, %s)", 
-            (user_name, email, hashed_password)
-        )
-        execute_commit(
-            "INSERT INTO user_roles (user_id, role_id) " \
-            "VALUES (%s, %s)",
-            (user_id, 3)
-        )
+        with transaction():
+            # Insert user
+            _, user_id = execute(
+                """
+                INSERT INTO users (user_name, email, password_hash)
+                VALUES (%s, %s, %s)
+                """, 
+                (user_name, email, hashed_password)
+            )
+            # Assign default role "patient"
+            execute(
+                """
+                INSERT INTO user_roles (user_id, role_id)
+                VALUES (%s, %s)
+                """,
+                (user_id, role_id)
+            )
+
     except Exception:
         flash("Registration failed. Please try again.")
         return render_template("auth/register.html")
