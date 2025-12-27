@@ -1,99 +1,136 @@
 # **Clinic Appointment Manager**
 
-**Clinic Appointment Manager** is a simple web application built with Flask and MySQL. It helps small clinics manage appointments, check staff availability, avoid booking conflicts, and send basic email reminders. The goal of this project is to learn how a full-stack Flask app works — from database design to backend scheduling logic to a simple web interface.
+**Clinic Appointment Manager** is a simple web application built with Flask and MySQL. It helps small clinics manage appointments. The goal of this project is to learn how a full-stack Flask app works — from database design to backend scheduling logic to a simple web interface.
 
 ---
+## **Appointment Lifecycle & Authorization Model**
 
-# ✅ Clinic Appointment Manager — Checklist
+This application implements a **role and permission-based appointment workflow** designed for a clinic environment.
 
-## 🔐 Authentication & Roles
-- [ ] User login & logout (Flask Login)
-- [ ] Role-based access (admin, staff, patient)
-- [ ] Password hashing
-- [ ] Session management
+The core logic lives in the **service layer** and is enforced independently of the UI.
 
-## 👤 User Management
-### Admin
-- [ ] Create staff accounts
-- [ ] View all users
-- [ ] Delete users
-- [ ] Reset staff passwords (optional)
+---
+## 1. Appointment Lifecycle
 
-### Patient
-- [ ] Patient registration
-- [ ] Edit personal profile
-- [ ] View their appointments
+Appointments move through a controlled set of states:
 
-## 🧑‍⚕️ Staff Profiles
-- [ ] Staff profile page (name, specialization, contact)
-- [ ] Staff availability configuration (working hours, breaks)
-- [ ] Staff view their upcoming appointments
+- From `requested`
+  - requested → confirmed
+  - requested → cancelled
 
-## 🗂 Database & Models (MySQL)
-- [ ] Users table
-- [ ] Staff profile table
-- [ ] Patients table
-- [ ] Resources table (rooms)
-- [ ] Appointments table
-- [ ] Notifications table
-- [ ] Proper foreign keys + cascading rules
+- From `confirmed`
+  - confirmed → completed
+  - confirmed → cancelled
+  - confirmed → no_show
 
-## 🕒 Scheduling & Availability Logic
-- [ ] No-overlap appointment logic
-- [ ] Time-slot generation (15/30 min intervals)
-- [ ] Validate slot availability at booking time
-- [ ] Blocked dates / holidays (optional)
+Only valid transitions are allowed. Invalid or unauthorized transitions are rejected at the service layer, regardless of UI behavior.
 
-## 📅 Appointment Booking
-### Patient Side
-- [ ] Choose staff → pick date
-- [ ] Fetch available time slots
-- [ ] Book appointment
-- [ ] Cancel appointment (optional)
+---
+## 2. Roles & Permissions Overview
 
-### Staff/Admin Side
-- [ ] View all appointments
-- [ ] Update appointment status (optional)
-- [ ] Reassign or reschedule appointments (future)
+The system uses **RBAC (Role-Based Access Control)** with service-level enforcement. 
 
-## 🏥 Resource Management (Room Allocation)
-- [ ] Attach room to appointment
-- [ ] Prevent double-booking of rooms
-- [ ] Admin view all room usage
+Roles are treated as permission bundles. All authorization decisions are ultimately permission-driven and enforced at the service layer.
 
-## ✉️ Notifications
-- [ ] Email confirmation on booking (Gmail SMTP)
-- [ ] Email to staff on new appointment (optional)
-- [ ] Appointment reminder email (future)
-- [ ] Failed email logging (optional)
 
-## 📊 Admin Dashboard
-- [ ] Total staff/patients count
-- [ ] Upcoming appointments
-- [ ] Most booked staff (optional)
-- [ ] Daily/weekly stats (future)
+**Roles**
+- **Admin**
+- **Clinic Receptionist**
+- **Doctor**
+- **Patient**
 
-## 🌐 Frontend (Minimal)
-- [ ] Basic Bootstrap layout
-- [ ] Simple navbar with role-based links
-- [ ] Appointment calendar UI (simple list, not JS-heavy)
-- [ ] Form validation messages
+**Key Permissions**
+- `create_appointments`
+- `view_appointments`
+- `manage_appointments`
 
-## 🔒 Security
-- [ ] Input validation
-- [ ] Prevent SQL injection with parameterized queries
-- [ ] Protect admin routes with decorators
-- [ ] Env-based config (no plain passwords)
-- [ ] CSRF protection (Flask-WTF)
+Permissions are checked at route boundaries, **ownership and scope** are enforced in services.
 
-## 🚀 Deployment (Optional for Learning)
-- [ ] Docker Compose (Flask + MySQL)
-- [ ] Environment variables in `.env`
-- [ ] Production config (debug off)
-- [ ] Test booking flow in Docker
+---
+## 3. Who Can Do What?
 
-## 🧪 Tests (Future / Learning)
-- [ ] Unit tests for availability logic
-- [ ] Test appointment creation & overlap prevention
-- [ ] Test API endpoints (optional)
+### Creating Appointments
 
+Rules:
+
+- **Admin / Receptionist**: Can create appointments for any patient
+
+- **Patient**: Can create appointments only for themselves
+
+- **Others**: Not allowed
+
+### Viewing Appointments
+
+Rules:
+
+- **Admin / Receptionist**: All appointments
+
+- **Doctor**: Only their own appointments (with patient name)
+
+- **Patient**: Only their own appointments (with doctor name)
+
+### Updating Appointment Status
+
+Status updates follow strict rules:
+
+**Admin**
+
+- Can perform any valid status transition
+
+**Clinic Receptionist**
+
+- Can: confirmed, cancelled, no_show
+- Cancellation requires a reason
+
+**Doctor**
+
+- Can mark appointments as completed
+- Only for their own appointments 
+
+**Patient**
+
+- Can cancel only their own 
+- Only while status is requested 
+
+All transitions are validated against an explicit state machine.
+
+---
+## 4. Security Model
+
+- Routes perform coarse permission checks; services remain the final authority.
+
+- Services enforce:
+
+    - role authority
+    - ownership
+    - state transitions
+
+- Database writes are atomic using transactions
+
+This design ensures that:
+
+- UI bugs cannot bypass authorization
+- Business rules are enforced consistently
+
+---
+## 5. Design Notes
+
+- Appointment deletion is intentionally not implemented
+
+- Soft-delete `(deleted_at)` is reserved for future use
+
+- UI may expose filtering and status changes, but never controls authorization
+
+- Permissions are intentionally not editable at runtime and are defined in code to prevent accidental or unauthorized privilege escalation.
+
+---
+## 6. Why This Design?
+
+This structure prioritizes:
+
+- service-level security
+- long-term extensibility without refactoring core logic
+
+It reflects how production systems protect workflow integrity by enforcing authorization at the service layer rather than relying on UI constraints.
+
+---
