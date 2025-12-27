@@ -14,6 +14,7 @@ Security model:
 
 from app.db import fetchall, fetchone, execute, transaction
 from datetime import datetime
+from users.service import create_user_by_staff
 
 ALLOWED_STATUSES = {
     "requested",
@@ -140,15 +141,28 @@ def create_appointment_for(user, data: dict) -> int:
     appt_time = data.get("appt_time")
     notes = data.get("notes")
 
-    if not patient_id or not doctor_id or not appt_date or not appt_time:
+    if not doctor_id or not appt_date or not appt_time:
         raise ValueError("Missing required appointment data")
     
+    # Patient resolution
+    if patient_id:
+        try:
+            patient_id = int(patient_id)
+        except (TypeError, ValueError):
+            raise ValueError("Invalid patient ID")   
+    else: 
+        if user.has_permission("create_user"):
+            patient_id = create_user_by_staff(user, data)    
+        else:
+            raise ValueError("Patient must exist or user creation permission required")
+    
+    # Validate doctor
     try:
-        patient_id = int(patient_id)
         doctor_id = int(doctor_id)
     except (TypeError, ValueError):
-        raise ValueError("Invalid patient or doctor ID")
+        raise ValueError("Invalid doctor ID")
     
+    # Role check
     if not _user_has_role(patient_id, "patient"):
         raise ValueError("Selected patient is not a valid patient.")
     
