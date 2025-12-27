@@ -72,24 +72,15 @@ def register():
     
     # User reached route via POST
     # Collect form data
+    name = request.form.get("name", "").strip()
     user_name = request.form.get("user_name", "").strip()
     email = request.form.get("email", "").strip()
     password = request.form.get("password")
     confirmation = request.form.get("confirmation")
     
-    # Ensure username was submitted
-    if not user_name:
-        flash("Must provide username")
-        return render_template("auth/register.html")
-    
-    # Ensure email was submitted
-    if not email:
-        flash("Must provide email")
-        return render_template("auth/register.html")
-
-    # Ensure password and confirm password was submitted
-    if not password or not confirmation:
-        flash("Must provide password and confirmation")
+    # Ensure all registration fields are populated
+    if not name or not user_name or not email or not password or not confirmation:
+        flash("Must populate all registration fields")
         return render_template("auth/register.html")
 
     # Ensure password and confirmation matches
@@ -132,6 +123,14 @@ def register():
                 VALUES (%s, %s)
                 """,
                 (user_id, role_id)
+            )
+            # Insert name in user_details
+            execute(
+                """
+                INSERT INTO user_details (user_id, name)
+                VALUES  (%s, %s)
+                """,
+                (user_id, name)
             )
 
     except Exception:

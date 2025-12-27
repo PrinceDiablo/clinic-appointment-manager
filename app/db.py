@@ -42,8 +42,8 @@ def close_db(e=None):
 
 def fetchone(query, parameters=None) -> dict:
     """
-    Execute: SELECT 
-    Return: A single row dict.
+    Helper function to execute a SELECT query and return a single row dict.
+
     Usage:
         row = fetchone("SELECT * FROM users WHERE id=%s",(id,))
     """
@@ -51,12 +51,25 @@ def fetchone(query, parameters=None) -> dict:
     with connection.cursor() as cursor:
         cursor.execute(query, parameters or ())
         return cursor.fetchone()
-    
-def execute_commit(query, parameters=None) -> list:
+
+def fetchall(query, parameters=None) -> list[dict]:
     """
-    WARNING: Do not use inside a `transaction()` block. This function commits immediately.
-    Execute: INSERT/UPDATE/DELETE and commit. 
-    Return: rowcount and lastrowid.
+    Helper function to execute a SELECT query and return all rows as a list of dicts.
+
+    Usage:
+        rows = fetchall("SELECT * FROM appointments WHERE doctor_id=%s", (doctor_id,)
+    """
+    connection = get_db()
+    with connection.cursor() as cursor:
+        cursor.execute(query, parameters or ())
+        return cursor.fetchall()
+
+def execute_commit(query, parameters=None) -> tuple[int, int]:
+    """
+    WARNING: Do NOT use inside a `transaction()` block. This function commits immediately.
+    
+    Helper function to execute INSERT/UPDATE/DELETE and commit. Returns rowcount and lastrowid.
+    
     Usage:
         n = execute_commit("UPDATE users SET failed_logins = failed_logins+1 WHERE id=%s", (id,))
     """
@@ -66,10 +79,10 @@ def execute_commit(query, parameters=None) -> list:
     connection.commit()
     return cursor.rowcount, cursor.lastrowid
 
-def execute(query, parameters=None) -> list:
+def execute(query, parameters=None) -> tuple[int, int]:
     """
-    Execute: INSERT/UPDATE/DELETE without committing. 
-    Return: rowcount and lastrowid.
+    Helper function to execute INSERT/UPDATE/DELETE without committing. Returns rowcount and lastrowid.
+
     Usage:
         n = execute("UPDATE users SET failed_logins = failed_logins+1 WHERE id=%s", (id,))
     """
@@ -80,6 +93,20 @@ def execute(query, parameters=None) -> list:
 
 @contextmanager
 def transaction():
+    """
+    Ensures that all operations executed within the block are committed
+    as a single transaction, or fully rolled back if an exception occurs.
+
+    Usage:
+        with transaction():
+            execute("INSERT INTO users (...) VALUES (...)")
+            execute("INSERT INTO user_roles (...) VALUES (...)")
+    
+    Instructions:
+    - Use `execute()` for write operations inside this block.
+    - Do NOT use `execute_commit()` inside a transaction.
+    - Any exception inside the block triggers a rollback.        
+    """
     db = get_db()
     try:
         db.begin()
