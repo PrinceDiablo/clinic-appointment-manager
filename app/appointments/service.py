@@ -14,7 +14,7 @@ Security model:
 
 from app.db import fetchall, fetchone, execute, transaction
 from datetime import datetime
-from users.service import create_user_by_staff
+from app.users.service import create_user_by_staff
 
 ALLOWED_STATUSES = {
     "requested",

@@ -51,13 +51,13 @@ def create_app():
     from .appointments import bp as appoint_bp
     app.register_blueprint(appoint_bp)
 
-    from dashboards.main import bp as main_bp
+    from .dashboards.main import bp as main_bp
     app.register_blueprint(main_bp)
 
-    from dashboards.admin import bp as admin_bp
+    from .dashboards.admin import bp as admin_bp
     app.register_blueprint(admin_bp)
 
-    from dashboards.doctor import bp as doc_bp
+    from .dashboards.doctor import bp as doc_bp
     app.register_blueprint(doc_bp)
 
     # Seed DB with data on first initialization
