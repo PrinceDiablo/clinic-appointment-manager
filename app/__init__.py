@@ -48,8 +48,11 @@ def create_app():
     from .auth import bp as auth_bp
     app.register_blueprint(auth_bp)
 
-    from .appointments import bp as appoint_bp
-    app.register_blueprint(appoint_bp)
+    from .appointments import bp as appt_bp
+    app.register_blueprint(appt_bp)
+
+    from .users import bp as users_bp
+    app.register_blueprint(users_bp)
 
     from .dashboards.main import bp as main_bp
     app.register_blueprint(main_bp)
@@ -59,6 +62,12 @@ def create_app():
 
     from .dashboards.doctor import bp as doc_bp
     app.register_blueprint(doc_bp)
+
+    from .dashboards.clinic_receptionist import bp as recpt_bp
+    app.register_blueprint(recpt_bp)
+
+    from .dashboards.patient import bp as patient_bp
+    app.register_blueprint(patient_bp)
 
     # Seed DB with data on first initialization
     from app.seed import run_seed_if_needed

@@ -1,11 +1,13 @@
 from flask_login import UserMixin
 
+# NOTE: user activation is enforced at query level (SQL),
+# not via Flask-Login's is_active hook (temporary design).
+
 class User(UserMixin):
     def __init__(self, row:dict, roles:list=None, permissions:list=None):
         self.id = row["id"]
         self.email = row["email"]
-        self.user_name = row["user_name"]
-        self.is_active = bool(row.get("is_active", 1))
+        self.user_name = row["user_name"]        
 
         self.roles = [r.lower() for r in (roles or [])]
         self.permissions = [p.lower() for p in (permissions or [])]

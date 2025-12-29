@@ -1,8 +1,11 @@
 # **Clinic Appointment Manager**
+## Video Demo:
 
-**Clinic Appointment Manager** is a simple web application built with Flask and MySQL. It helps small clinics manage appointments.
+**Clinic Appointment Manager** is a web application built with Flask and MySQL that helps small clinics manage appointments through a structured, role-based workflow.
 
-The goal of this project is to understand how a full-stack Flask application is structured — from database design and service-layer business logic to a minimal web interface — with a strong emphasis on correctness and authorization.
+The goal of this project is to understand how a full-stack Flask application is structured — from database design and service-layer business logic to authentication, authorization, and a minimal web interface — with a strong emphasis on **correctness, security, and explicit business rules**.
+
+This project was developed as a CS50 final project and intentionally focuses on backend correctness over UI complexity.
 
 ---
 
@@ -11,7 +14,7 @@ The goal of this project is to understand how a full-stack Flask application is 
 This application implements a **role- and permission-based workflow** designed for a clinic environment.
 
 All business rules are enforced in the **service layer**, independently of the UI.  
-Routes perform coarse permission checks, but services remain the final authority.
+Routes perform coarse permission checks, but **services remain the final authority** for authorization, ownership, and state transitions.
 
 ---
 ## 1. Appointment Lifecycle
@@ -27,7 +30,9 @@ Appointments move through a controlled set of states:
   - confirmed → cancelled
   - confirmed → no_show
 
-Only valid transitions are allowed. Invalid or unauthorized transitions are rejected at the service layer, regardless of UI behavior.
+Only valid transitions are allowed. 
+
+Invalid or unauthorized transitions are rejected at the service layer, regardless of UI behavior.
 
 ---
 ## 2. Roles & Permissions Overview
@@ -46,8 +51,10 @@ Roles are treated as **permission bundles**. All authorization decisions are per
 **Key Permissions**
 - `create_appointments`
 - `view_appointments`
+- `update_appointments`
 - `manage_appointments`
 - `create_user`
+- `view_user`
 
 Permissions are checked at route boundaries, business rules are enforced in the service layer.
 
@@ -58,11 +65,13 @@ Permissions are checked at route boundaries, business rules are enforced in the 
 
 Rules:
 
-- **Admin / Receptionist** 
+- **Admin / Clinic Receptionist** 
   - Can create appointments for any patient
+  - Appointments are immediately confirmed
 
 - **Patient** 
   - Can create appointments only for themselves
+  - Appointments are created with status `requested`
 
 - **Others**
   - Not allowed
@@ -73,13 +82,13 @@ Rules:
 Rules:
 
 - **Admin / Receptionist**
-  - All appointments
+  - Can view all appointments
 
 - **Doctor** 
-  - Only their own appointments (with patient name)
+  - Can view only thein own appointments (with patient name)
 
 - **Patient** 
-  - Only their own appointments (with doctor name)
+  - Can view only their own appointments (with doctor name)
 
 ---
 
@@ -91,7 +100,7 @@ Status updates follow strict rules:
   - Can perform any valid status transition
 
 - **Clinic Receptionist**
-  - Can: confirmed, cancelled, no_show
+  - Can: confirm, cancell, mark no_show
   - Cancellation requires a reason
 
 - **Doctor**
@@ -99,8 +108,8 @@ Status updates follow strict rules:
   - Only for their own appointments 
 
 - **Patient**
-  - Can cancel only their own 
-  - Only while status is requested 
+  - Can cancel only their own appointments 
+  - Only while status is `requested` 
 
 All transitions are validated against an explicit state machine.
 
@@ -122,10 +131,22 @@ This model follows these rules:
 - User creation may occur as part of the appointment creation workflow
 - The UI does not decide whether a user is created; the service layer enforces this rule
 
-This approach maintains a single, consistent identity model while supporting real-world clinic operations.
+This maintains a single, consistent identity model while supporting real-world clinic operations.
 
 ---
-## 5. Security Model
+## 5. Role-Based Dashboards & Landing Behavior
+
+After login, users are redirected to a **roal-specific dashboard**:
+
+- **Admin** → Admin dashboard (system oversight)
+- Clinic Receptionist → Receptionist dashboard (operational workspace)
+- Doctor → Doctor dashboard (appointment-focused view)
+- Patient → Patient dashboard (personal appointment view) 
+
+Landing decisions are made centrally and enforced consistently, ensuring users only see interfaces appropriate to their role and permissions.
+
+---
+## 6. Security Model
 
 - Routes perform coarse permission checks; services remain the final authority.
 - Services enforce:
@@ -137,25 +158,28 @@ This approach maintains a single, consistent identity model while supporting rea
 This design ensures that:
 - UI bugs cannot bypass authorization
 - Business rules are enforced consistently
+- Sensitive operations remain protected even if routes are misused
 
 ---
-## 6. Design Notes
+## 7. Design Notes
 
 - Appointment deletion is intentionally not implemented
 - Soft-delete `(deleted_at)` is reserved for future use
 - UI may expose filtering and status changes, but never controls authorization
-- Permissions are intentionally not editable at runtime and are defined in code to prevent accidental or unauthorized privilege escalation.
-- Staff-created user accounts currently use a temporary default password. This is a conscious trade-off during early development and will be replaced with a proper onboarding flow.
+- Permissions are not editable at runtime to prevent privilege escalation
+- Staff-created user accounts currently use a temporary default password
+(to be replaced with a proper onboarding/reset flow in future iterations)
 
 ---
-## 7. Why This Design?
+## 8. Why This Design?
 
 This structure prioritizes:
 
 - service-level security
 - clear ownership boundaries
+- explicit business rules
 - extensibility without refactoring core logic
 
-It reflects how production systems protect workflow integrity by enforcing authorization and business rules at the service layer rather than relying on UI constraints.
+It reflects how production systems protect workflow integrity by enforcing authorization and domain rules at the service layer rather than relying on UI constraints.
 
 ---

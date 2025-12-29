@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Clinic Receptionist Dashboard
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-start min-vh-100 pt-index">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0 rounded-4 home-card">
+                <div class="card-body p-5 text-center">
+
+                    <h1 class="fw-bold mb-3">
+                        Clinic Receptionist Dashboard
+                    </h1>
+                    
+                    <p class="text-muted fs-5 mb-4">
+                        Clinic Receptionist work space.
+                    </p>
+
+                    <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 text-center">
+                        <a href="{{ url_for('appointments.list_appointments') }}"
+                        class="btn btn-outline-secondary btn-lg">
+                            View All Appointments
+                        </a>
+
+                        <a href="{{ url_for('users.create_user') }}"
+                        class="btn btn-outline-secondary btn-lg">
+                            Create User
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,70 @@
+
+{% if current_user.has_permission("manage_appointments") %}
+    <!-- Admin -->
+    <form method="POST" action="{{ url_for('appointments.update_appointment_status') }}" class="d-flex gap-2 align-items-center">
+        <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+
+        <select name="status" class="form-select form-select-sm" required>
+            <option value="">Change status</option>
+            <option value="confirmed">Confirm</option>
+            <option value="cancelled">Cancel</option>
+            <option value="no_show">No Show</option>
+            <option value="completed">Completed</option>
+        </select>
+
+        <input type="text" name="notes" class="form-control form-control-sm" placeholder="Notes (optional)">
+        
+        <button type="submit" class="btn btn-sm btn-primary">
+            Update
+        </button>
+    </form>
+
+{% elif current_user.has_role("clinic_receptionist") %}
+    <!-- Receptionist -->
+    <form method="POST" action="{{ url_for('appointments.update_appointment_status') }}" class="d-flex gap-2 align-items-center">
+        <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+
+        <select name="status" class="form-select form-select-sm" required>
+            <option value="">Change status</option>
+            <option value="confirmed">Confirm</option>
+            <option value="cancelled">Cancel</option>
+            <option value="no_show">No Show</option>
+            <option value="completed">Completed</option>
+        </select>
+
+        <input type="text" name="notes" class="form-control form-control-sm" placeholder="Notes (optional)">
+        
+        <button type="submit" class="btn btn-sm btn-primary">
+            Update
+        </button>
+    </form>
+
+{% elif current_user.has_role("doctor") and appt.status == "confirmed" %}
+    <!-- Doctor -->
+    <form method="POST" action="{{ url_for('appointments.update_appointment_status') }}">
+        <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+        <input type="hidden" name="status" value="completed">
+
+        <input type="text" name="notes" class="form-control form-control-sm mb-2" placeholder="Notes (optional)">
+
+        <button class="btn btn-success">
+            Mark Completed
+        </button>
+    </form>
+
+{% elif current_user.has_role("patient") and appt.status == "requested" %}
+    <!-- Patient -->
+    <form method="POST" action="{{ url_for('appointments.update_appointment_status') }}">
+        <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+        <input type="hidden" name="status" value="cancelled">
+        
+        <input type="text" name="notes" class="form-control form-control-sm mb-2" placeholder="Notes (optional)">
+
+        <button class="btn btn-sm btn-danger">
+            Cancel
+        </button>
+    </form>
+
+{% else %}
+    <span class="text-muted">—</span>
+{% endif %}

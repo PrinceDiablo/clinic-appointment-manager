@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Appointments
+{% endblock %}
+
+{% block nav %}
+    <a href="{{ url_for('appointments.create_appointment') }}" class="btn btn-primary">
+        New Appointment
+    </a>                
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+
+        <h2 class="fw-bold mb-4">
+            Appointments
+        </h2>
+
+        {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date & Time</th>
+
+                            {% if current_user.has_permission("manage_appointments") or current_user.has_role("clinic_receptionist") %}
+                                <th>Doctor</th>
+                                <th>Patient</th>
+                            {% elif current_user.has_role("doctor") %}
+                                <th>Patient</th>
+                            {% elif current_user.has_role("patient") %}
+                                <th>Doctor</th>
+                            {% endif %}
+    
+                            <th>Status</th>
+                            <th>Update</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                            <tr>
+                                <td>
+                                    {{ appt.appointment_timestamp }}
+                                </td>
+
+                                {% if current_user.has_permission("manage_appointments") or current_user.has_role("clinic_receptionist") %}
+                                    <td>
+                                        {{ appt.doctor_name }}
+                                    </td>
+                                    <td>
+                                        {{ appt.patient_name }}
+                                    </td>
+                                {% elif current_user.has_role("doctor") %}
+                                    <td>
+                                        {{ appt.patient_name }}
+                                    </td>
+                                {% elif current_user.has_role("patient") %}
+                                    <td>
+                                        {{ appt.doctor_name }}
+                                    </td>
+                                {% endif %}
+                                
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ appt.status }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% include "appointments/_status_actions.html" %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No appointments found.
+            </div> 
+        {% endif %}
+
+    </div>
+{% endblock %}

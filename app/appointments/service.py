@@ -135,7 +135,6 @@ def create_appointment_for(user, data: dict) -> int:
         appointment_id(int)
     """
     # Extract and validate appointment data
-    patient_id = data.get("patient_id")
     doctor_id = data.get("doctor_id")
     appt_date = data.get("appt_date")
     appt_time = data.get("appt_time")
@@ -145,16 +144,25 @@ def create_appointment_for(user, data: dict) -> int:
         raise ValueError("Missing required appointment data")
     
     # Patient resolution
-    if patient_id:
-        try:
-            patient_id = int(patient_id)
-        except (TypeError, ValueError):
-            raise ValueError("Invalid patient ID")   
-    else: 
-        if user.has_permission("create_user"):
-            patient_id = create_user_by_staff(user, data)    
-        else:
-            raise ValueError("Patient must exist or user creation permission required")
+    if user.has_role("patient"):
+        patient_id = user.id
+    elif user.has_permission("create_user"):
+        user_name = data.get("user_name")
+        if not user_name:
+            raise ValueError("Patient username is required")
+        
+        row = fetchone("SELECT id FROM users WHERE user_name = %s",(data.get("user_name"),))
+        if not row:
+            raise ValueError("Patient not found")
+        
+        patient_id = row["id"]
+    else:
+        raise ValueError("Patient does not exist. Create user first.")
+
+    try:
+        patient_id = int(patient_id)
+    except (TypeError, ValueError):
+        raise ValueError("Invalid patient ID")   
     
     # Validate doctor
     try:
@@ -180,16 +188,19 @@ def create_appointment_for(user, data: dict) -> int:
     # Admin, full access
     if user.has_permission("manage_appointments"):
         created_by_staff = user.id
+        status = "confirmed"
 
     # Clinic_receptionist, full CREATE access
     elif user.has_role("clinic_receptionist"):
         created_by_staff = user.id
+        status = "confirmed"
     
     # Patient, self application creation
     elif user.has_permission("create_appointments") and user.has_role("patient"):
         if patient_id != user.id:
             raise ValueError("Patient can only create appointments for themselves")
         created_by_staff = None
+        status = "requested"
     
     else:
         raise ValueError("User is not allowed to create appointments")
@@ -198,10 +209,10 @@ def create_appointment_for(user, data: dict) -> int:
     with transaction():
         _, appointment_id = execute(
             """
-            INSERT INTO appointments (patient_id, doctor_id, appointment_timestamp, notes, created_by_staff)
-            VALUES (%s, %s, %s, %s, %s)    
+            INSERT INTO appointments (patient_id, doctor_id, appointment_timestamp, status, notes, created_by_staff)
+            VALUES (%s, %s, %s, %s, %s, %s)    
             """,
-            (patient_id, doctor_id, appt_ts, notes, created_by_staff)
+            (patient_id, doctor_id, appt_ts, status, notes, created_by_staff)
         )
 
     return appointment_id

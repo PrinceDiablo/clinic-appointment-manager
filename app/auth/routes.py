@@ -26,9 +26,13 @@ def login():
     
     # Check valid username and password
     row = fetchone(
-        "SELECT id, password_hash FROM users WHERE user_name=%s AND is_active=1", 
-        (user_name,)
-    )
+    """
+    SELECT id, user_name, email, password_hash
+    FROM users
+    WHERE user_name = %s AND is_active = 1
+    """,
+    (user_name,)
+)
 
     if not row or not check_password_hash(row["password_hash"], password):
         flash("Incorrect username or password")

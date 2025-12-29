@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Create Appointment
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center align-items-start min-vh-100 pt-5">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-5">
+
+                    <h2 class="fw-bold text-center mb-4">
+                        Create Appointment
+                    </h2>
+
+                    <form method="POST" action="{{ url_for('appointments.create_appointment') }}">
+
+                        {% if current_user.has_permission("create_user") %}
+
+                            <div class="mb-3">
+                                <label class="form-label">Patient Username</label>
+                                <div class="input-group">
+                                    <input type="text" name="user_name" class="form-control" required>
+
+                                    <a href="{{ url_for('users.create_user') }}" class="btn btn-outline-secondary fw-bold" target="_blank">
+                                    +
+                                    </a>
+                                </div>
+                            </div>
+
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Doctor ID</label>
+                            <input type="number" name="doctor_id" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Appointment Date</label>
+                            <input type="date" name="appt_date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Appointment Time</label>
+                            <input type="time" name="appt_time" class="form-control" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Create Appointment
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+                    
+
