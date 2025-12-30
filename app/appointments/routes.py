@@ -28,7 +28,7 @@ def create_appointment():
         appointment_id = create_appointment_for(current_user, request.form)
     except ValueError as e:
         flash (str(e))
-        return redirect(url_for("appointments.list_appointments")) 
+        return redirect(url_for("appointments.create_appointment")) 
     
     flash("Appointment created successfully", "success")
     return redirect(url_for("appointments.list_appointments"))
