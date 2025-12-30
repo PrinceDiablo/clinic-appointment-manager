@@ -8,7 +8,7 @@ def landing_for_user(user):
         return "doctor.dashboard"
 
     if user.has_role("clinic_receptionist"):
-        return "receptionist.dashboard"
+        return "clinic_receptionist.dashboard"
 
     if user.has_role("patient"):
         return "patient.dashboard"

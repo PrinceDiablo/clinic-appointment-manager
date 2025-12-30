@@ -30,18 +30,22 @@
                 <a class="navbar-brand" href="{{ url_for('main.index') }}">CAM</a>
 
                 <div class="collapse navbar-collapse">
-                    {% block nav %}
-                    <!-- role-specific nav can override this -->
-                    {% endblock %}
+                    <ul class="navbar-nav">
+                        {% block nav %}
+                        <!-- role-specific nav can override this -->
+                        {% endblock %}
+                    </ul>
                 
                     <ul class="navbar-nav ms-auto">
                         {% if current_user.is_authenticated %}
+                        <!--
                             <li class="nav-item">
                                 <a class="nav-link" href="#">
                                     Profile
                                 </a>
                             </li>
                             <li class="nav-item">
+                        -->
                                 <form method="POST" action="{{ url_for('auth.logout') }}" class="d-inline">
                                     <button type="submit" class="nav-link btn btn-link">
                                         Logout

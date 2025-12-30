@@ -57,7 +57,7 @@ def fetchall(query, parameters=None) -> list[dict]:
     Helper function to execute a SELECT query and return all rows as a list of dicts.
 
     Usage:
-        rows = fetchall("SELECT * FROM appointments WHERE doctor_id=%s", (doctor_id,)
+        rows = fetchall("SELECT * FROM appointments WHERE doctor_id=%s", (doctor_id,))
     """
     connection = get_db()
     with connection.cursor() as cursor:

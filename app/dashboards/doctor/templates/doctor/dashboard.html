@@ -4,6 +4,14 @@
     Doctor Dashboard
 {% endblock %}
 
+{% block nav %}
+    <li class="nav-item"> 
+        <a class="nav-link" href="{{ url_for('appointments.list_appointments') }}">
+            View Appointments
+        </a> 
+    </li>
+{% endblock %}
+
 {% block content %}
     <div class="row justify-content-center align-items-start min-vh-100 pt-index">
         <div class="col-12 col-md-8 col-lg-6">
@@ -22,7 +30,7 @@
                     <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 text-center">
                         <a href="{{ url_for('appointments.list_appointments') }}"
                         class="btn btn-outline-secondary btn-lg">
-                            View All Appointments
+                            View Appointments
                         </a>
                     </div>
 

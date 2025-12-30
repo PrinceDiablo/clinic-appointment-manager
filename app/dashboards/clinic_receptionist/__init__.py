@@ -4,7 +4,7 @@ bp = Blueprint(
     'clinic_receptionist',
     __name__,
     template_folder="templates",
-    url_prefix='/receptionist'
+    url_prefix='/clinic_receptionist'
 
 )
 
