@@ -1,5 +1,5 @@
 # **Clinic Appointment Manager**
-## Video Demo:
+## Video Demo: (https://youtu.be/IwaozE8RrW8)
 
 **Clinic Appointment Manager** is a web application built with Flask and MySQL that helps small clinics manage appointments through a structured, role-based workflow.
 
